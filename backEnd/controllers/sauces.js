@@ -1,5 +1,6 @@
 const Sauce = require('../models/sauce');
 const fs = require('fs');
+const jwToken = require('jsonwebtoken');
 
 exports.getAllSauces = (req, res, next) => {
     console.log(' getAllSauces Requête reçue !');
@@ -57,37 +58,46 @@ exports.getAllSauces = (req, res, next) => {
         .catch(error => res.status(500).json({ error }));
     };
     
-    exports.updateOneSauce = (req, res, next) => {
-        console.log(' updateOneSauce Requête reçue !');
-        
-        Sauce.findOne({ _id: req.params.id })
-        .then(sauce => {
-            // La méthode JSON.parse() analyse une chaîne de caractères JSON et construit la valeur JavaScript 
-            // ou l'objet décrit par cette chaîne
-            
-            const filename = sauce.imageUrl.split('/images/')[1];
+    exports.updateOneSauce = (req, res) => {
+         // Recup sauce avec id
+    Sauce.findOne({ _id: req.params.id })
+    .then((sauce) => {
+        // Enregistrement ancienne imgUrl (si nouvelle image dans modif)
+        const oldUrl = sauce.imageUrl;
+        // Recuperation nom de l'image
+        const filename = sauce.imageUrl.split("/images/")[1];
+        // Suppression IMG dans le dossier local
+        if (req.file) {
             fs.unlink(`images/${filename}`, () => {
-                
-                const sauceObject = req.file ?
-                {
+                const sauceObject = {
                     ...JSON.parse(req.body.sauce),
-                    imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-                } : { ...req.body };
-                
+                    imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename
+                        }`,
+                };
+                // MAJ de la sauce avec données modifiées
                 Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
-                .then(() => res.status(200).json({ message: 'Objet modifié !'}))
-                .catch(error => res.status(400).json({ error }));
-                
+                    .then(() => res.status(200).json({ message: 'Sauce modifié !' }))
+                    .catch(error => res.status(400).json({ error }));
             });
-            
-        })
-        .catch(error => res.status(500).json({ error }));
+        } else {
+            const newItem = req.body;
+            newItem.imageUrl = oldUrl;
+            // MAJ de la sauce avec données modifiées
+            Sauce.updateOne(
+                { _id: req.params.id, userId: req.body.userId },
+                { ...newItem, imageUrl: oldUrl, _id: req.params.id }
+            )
+                .then(() => res.status(200).json({ message: "Sauce mise à jour!" }))
+                .catch((error) => res.status(400).json({ error }));
+        }
+    })
+    .catch((error) => res.status(500).json({ error }));
     };
     
     exports.like = (req, res, next) => {
 
-        var userId = req.body.userId;
-        var like = req.body.like;
+        let userId = req.body.userId;
+        let like = req.body.like;
         Sauce.findOne({ _id: req.params.id })
         .then(sauce => {            
             let userId_found = false;

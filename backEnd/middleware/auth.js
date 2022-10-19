@@ -11,7 +11,7 @@ module.exports = (req, res, next) => {
         dotEnv.config() // Appel de dotEnv pour le secret key token
 
         // Recupère le token et vérifie son authenticité 
-        const token = req.headers.authorization.split(' ')[1];
+        const token = req.headers.authorization.split(' ')[1]; 
         const decodedToken = jwToken.verify(token, process.env.TOKEN_KEY);
         const userId = decodedToken.userId;
 

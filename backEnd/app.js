@@ -20,9 +20,8 @@ require('dotenv').config();
 
 const limiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 100, // Limit each IP
+	max: 100, 
   standardHeaders: true, // retourne l'info de limite dans les headers
-  legacyHeaders: false // désactive le 'X-rateLimit-*' headers
 })
 
 app.use(limiter)
