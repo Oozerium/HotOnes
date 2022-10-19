@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 // import de jsonwebtoken : permet de créer et vérifier des tokens
 const jwt = require('jsonwebtoken');
 
-const dotEnv = require('dotenv');
+const dotenv = require("dotenv").config({ encoding: "latin1" });
 
 // import du modèle User
 const User = require('../models/user');
@@ -43,7 +43,6 @@ exports.login = (req, res) => {
                 if (!valid) {
                     return res.status(401).json({ error: 'Identifiant ou mot de passe incorrecte !'});
                 }
-                dotEnv.config(); // invoking the dotenv config for secret key token
                 res.status(200).json({
                     userId: user._id,
                     /* vérifie le token à chaque fois avec la fonction 
@@ -51,7 +50,7 @@ exports.login = (req, res) => {
                     token: jwt.sign(
                         { userId: user._id},
                         process.env.TOKEN_KEY,
-                        { expiresIn: '24h' }
+                        { expiresIn: '1h' }
                     )
                 });
             })
